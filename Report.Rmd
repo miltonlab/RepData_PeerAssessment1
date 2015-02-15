@@ -3,21 +3,33 @@ title: 'Reproducible Research: Peer Assessment 1 - Report'
 author: "Milton Labanda"
 date: "13/02/2015"
 output:
-  word_document: default
   html_document:
     keep_md: yes
+  word_document: default
 ---
 
 
 ## Loading and preprocessing the data
 ```{r}
-df <- read.table(unzip('activity.zip','activity.csv'), sep=',')
-str(df)
+df <- read.table(unzip('activity.zip','activity.csv'), sep=',', header=T)
+summary(df)
 ```
 
 ## What is mean total number of steps taken per day?
 
+```{r}
+library(plyr)
+library(ggplot2)
+library(scales)
+byDay <- ddply(df, ~date, summarise, totalSteps=sum(steps))
+clean <- byDay[complete.cases(byDay),]
+#head(byDay)
+ggplot(clean, aes(x=as.Date(date))) + geom_histogram(binwidth=.5,alpha=.5,colour="black", position="identity") + scale_y_continuous(labels = percent_format())
 
+```  
+
+The mean totalSteps by day is **`r mean(clean$totalSteps)`**  
+The median totalSteps by day is **`r median(clean$totalSteps)`**  
 
 ## What is the average daily activity pattern?
 
