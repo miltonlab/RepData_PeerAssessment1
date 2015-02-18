@@ -2,6 +2,14 @@
 Milton Labanda  
 13/02/2015  
 
+### Requriments
+
+
+```r
+library(plyr)
+library(ggplot2)
+```
+
 
 ## Loading and preprocessing the data
 
@@ -26,8 +34,6 @@ summary(df)
 
 
 ```r
-library(plyr)
-library(ggplot2)
 byDay <- ddply(df, ~date, summarise, totalSteps=sum(steps))
 byDay <- byDay[complete.cases(byDay),]
 # hist(activities$totalSteps, 
@@ -39,7 +45,7 @@ byDay <- byDay[complete.cases(byDay),]
 ggplot(byDay, aes(totalSteps)) + geom_histogram(binwidth=500, fill="steelblue") + labs(title="Total steps by Day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
 
 The mean totalSteps by day is **1.0766189\times 10^{4}**  
 The median totalSteps by day is **10765**  
@@ -55,7 +61,7 @@ max_interval = byInterval[byInterval$averaged==max_averaged,]$interval
 ggplot(byInterval, aes(interval, averaged)) + geom_line(colour="steelblue") + labs(title="Mean steps by Interval") + geom_vline(xintercept=max_interval, colour="red")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
@@ -79,21 +85,42 @@ The total number of rows with NAs is:  2304
 
 
 ```r
-cleanDF <- df
-cleanDF[!complete.cases(cleanDF),"steps"]<- byInterval$averaged
+filledDF <- df
+filledDF[!complete.cases(filledDF),"steps"]<- byInterval$averaged
 ```
 
 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 
 ```r
-byDay <- ddply(cleanDF, ~date, summarise, totalSteps=sum(steps))
+byDay <- ddply(filledDF, ~date, summarise, totalSteps=sum(steps))
 ggplot(byDay, aes(totalSteps)) + geom_histogram(binwidth=500, fill="steelblue") + labs(title="Total steps by Day cleaned")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
 
 The mean totalSteps by day in cleaned data is **1.0766189\times 10^{4}**  
 The median totalSteps by day in cleaned data is **1.0766189\times 10^{4}**  
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+
+```r
+wkDF <- transform(filledDF, 
+                      dayOfWeek = ifelse (weekdays(as.Date(filledDF$date)) %in% c("saturday", "sunday", "sábado","domingo"), "weekend", "weekday")
+                      )
+```
+
+2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+
+
+```r
+groupedWeek <- ddply(wkDF, .(interval, dayOfWeek), summarise, averagedSteps = mean(steps))
+graph = ggplot(groupedWeek, aes(interval, averagedSteps, group=dayOfWeek)) + geom_line(colour="steelblue") + facet_wrap(~dayOfWeek, nrow=2)
+print(graph)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
+
